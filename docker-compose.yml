@@ -1,8 +1,3 @@
-# ============================================
-# Docker Compose Configuration
-# EventManager Application - MongoDB Only
-# ============================================
-
 services:
   # ============================================
   # MongoDB Database
@@ -46,9 +41,6 @@ services:
       mongodb:
         condition: service_healthy
 
-# ============================================
-# Volumes
-# ============================================
 volumes:
   mongodb_data:
     driver: local
