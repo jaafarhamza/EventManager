@@ -5,10 +5,10 @@ export type PasswordResetTokenDocument = HydratedDocument<PasswordResetToken>;
 
 @Schema({ timestamps: true })
 export class PasswordResetToken {
-  @Prop({ required: true, index: true })
+  @Prop({ required: true })
   code!: string; // 6-digit code (hashed)
 
-  @Prop({ required: true, type: Types.ObjectId, ref: 'User', index: true })
+  @Prop({ required: true, type: Types.ObjectId, ref: 'User' })
   userId!: Types.ObjectId;
 
   @Prop({ required: true })

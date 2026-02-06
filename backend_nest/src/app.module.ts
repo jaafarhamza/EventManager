@@ -11,6 +11,7 @@ import { AuditLog, AuditLogSchema } from './common/schemas/audit-log.schema';
 import { AuditService } from './common/services/audit.service';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
+import { EventsModule } from './modules/events/events.module';
 
 @Module({
   imports: [
@@ -64,6 +65,8 @@ import { RolesGuard } from './common/guards/roles.guard';
     ]),
 
     AuthModule,
+
+    EventsModule,
   ],
   controllers: [AppController],
   providers: [
