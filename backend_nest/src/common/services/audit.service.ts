@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import {
   AuditLog,
   AuditLogDocument,
@@ -27,7 +27,19 @@ export class AuditService {
 
   async log(data: AuditLogData): Promise<void> {
     try {
-      await this.auditLogModel.create(data);
+      // Convert userId string to ObjectId if provided
+      const logData = {
+        action: data.action,
+        email: data.email,
+        ipAddress: data.ipAddress,
+        userAgent: data.userAgent,
+        success: data.success,
+        errorMessage: data.errorMessage,
+        metadata: data.metadata,
+        userId: data.userId ? new Types.ObjectId(data.userId) : undefined,
+      };
+
+      await this.auditLogModel.create(logData);
     } catch (error) {
       console.error('Failed to create audit log:', error);
     }

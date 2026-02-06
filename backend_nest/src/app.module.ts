@@ -12,6 +12,7 @@ import { AuditService } from './common/services/audit.service';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { EventsModule } from './modules/events/events.module';
+import { ReservationsModule } from './modules/reservations/reservations.module';
 
 @Module({
   imports: [
@@ -67,6 +68,8 @@ import { EventsModule } from './modules/events/events.module';
     AuthModule,
 
     EventsModule,
+
+    ReservationsModule,
   ],
   controllers: [AppController],
   providers: [

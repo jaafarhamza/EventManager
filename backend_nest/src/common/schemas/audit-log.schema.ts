@@ -15,6 +15,11 @@ export enum AuditAction {
   FAILED_LOGIN = 'failed_login',
   ACCOUNT_LOCKED = 'account_locked',
   UNAUTHORIZED_ACCESS_ATTEMPT = 'UNAUTHORIZED_ACCESS_ATTEMPT',
+  RESERVATION_CREATED = 'reservation_created',
+  RESERVATION_CONFIRMED = 'reservation_confirmed',
+  RESERVATION_REFUSED = 'reservation_refused',
+  RESERVATION_CANCELED = 'reservation_canceled',
+  RESERVATION_FAILED = 'reservation_failed',
 }
 
 @Schema({ timestamps: true })

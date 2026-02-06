@@ -190,6 +190,26 @@ export class EventsService {
     await event.save();
   }
 
+  async decrementSeatsAtomic(eventId: string): Promise<Event | null> {
+    const updatedEvent = await this.eventModel
+      .findOneAndUpdate(
+        {
+          _id: eventId,
+          availableSeats: { $gt: 0 },
+          status: EventStatus.PUBLISHED,
+        },
+        {
+          $inc: { availableSeats: -1 },
+        },
+        {
+          new: true,
+        },
+      )
+      .exec();
+
+    return updatedEvent;
+  }
+
   async incrementSeats(eventId: string): Promise<void> {
     const event = await this.eventModel.findById(eventId).exec();
 
@@ -203,6 +223,31 @@ export class EventsService {
 
     event.availableSeats += 1;
     await event.save();
+  }
+
+  async incrementSeatsAtomic(eventId: string): Promise<Event | null> {
+    const event = await this.eventModel.findById(eventId).exec();
+
+    if (!event) {
+      return null;
+    }
+
+    const updatedEvent = await this.eventModel
+      .findOneAndUpdate(
+        {
+          _id: eventId,
+          availableSeats: { $lt: event.capacity },
+        },
+        {
+          $inc: { availableSeats: 1 },
+        },
+        {
+          new: true,
+        },
+      )
+      .exec();
+
+    return updatedEvent;
   }
 
   async canBeReserved(eventId: string): Promise<boolean> {
