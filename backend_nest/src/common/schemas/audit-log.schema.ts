@@ -20,6 +20,7 @@ export enum AuditAction {
   RESERVATION_REFUSED = 'reservation_refused',
   RESERVATION_CANCELED = 'reservation_canceled',
   RESERVATION_FAILED = 'reservation_failed',
+  DOWNLOAD_EVENT_STATS_PDF = 'download_event_stats_pdf',
 }
 
 @Schema({ timestamps: true })

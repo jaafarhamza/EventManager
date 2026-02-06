@@ -7,6 +7,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AuthService } from './auth.service';
 import { AuthRefreshTokenService } from './auth-refresh.service';
 import { EmailService } from './email.service';
+import { AdminService } from './admin.service';
 import { AuthController } from './auth.controller';
 import { AdminController } from './admin.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -23,16 +24,24 @@ import {
 } from './schemas/password-reset-token.schema';
 import { AuditLog, AuditLogSchema } from '../common/schemas/audit-log.schema';
 import { AuditService } from '../common/services/audit.service';
+import { PdfService } from '../common/services/pdf.service';
+import { Event, EventSchema } from '../modules/events/schemas/event.schema';
+import {
+  Reservation,
+  ReservationSchema,
+} from '../modules/reservations/schemas/reservation.schema';
 import type { SignOptions } from 'jsonwebtoken';
 
 @Module({
   imports: [
-    // Import User, RefreshToken, PasswordResetToken, and AuditLog models
+    // Import User, RefreshToken, PasswordResetToken, AuditLog, Event, and Reservation models
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: RefreshToken.name, schema: RefreshTokenSchema },
       { name: PasswordResetToken.name, schema: PasswordResetTokenSchema },
       { name: AuditLog.name, schema: AuditLogSchema },
+      { name: Event.name, schema: EventSchema },
+      { name: Reservation.name, schema: ReservationSchema },
     ]),
 
     // Configure Passport
@@ -60,7 +69,9 @@ import type { SignOptions } from 'jsonwebtoken';
     AuthService,
     AuthRefreshTokenService,
     EmailService,
+    AdminService,
     AuditService,
+    PdfService,
     JwtStrategy,
     JwtRefreshStrategy,
     GoogleStrategy,
