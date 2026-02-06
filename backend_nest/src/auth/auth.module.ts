@@ -8,6 +8,7 @@ import { AuthService } from './auth.service';
 import { AuthRefreshTokenService } from './auth-refresh.service';
 import { EmailService } from './email.service';
 import { AuthController } from './auth.controller';
+import { AdminController } from './admin.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
@@ -54,7 +55,7 @@ import type { SignOptions } from 'jsonwebtoken';
     // Import ScheduleModule for cron jobs
     ScheduleModule.forRoot(),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, AdminController],
   providers: [
     AuthService,
     AuthRefreshTokenService,

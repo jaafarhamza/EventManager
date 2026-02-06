@@ -9,6 +9,8 @@ import { AuthModule } from './auth/auth.module';
 import databaseConfig from './config/database.config';
 import { AuditLog, AuditLogSchema } from './common/schemas/audit-log.schema';
 import { AuditService } from './common/services/audit.service';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { RolesGuard } from './common/guards/roles.guard';
 
 @Module({
   imports: [
@@ -38,27 +40,25 @@ import { AuditService } from './common/services/audit.service';
       inject: [ConfigService],
     }),
 
-    // Rate Limiting (2026 Best Practice)
-    // Multiple tiers for different use cases
     ThrottlerModule.forRoot([
       {
         name: 'short',
-        ttl: 1000, // 1 second
-        limit: 3, // 3 requests per second (burst protection)
+        ttl: 1000,
+        limit: 3,
       },
       {
         name: 'medium',
-        ttl: 10000, // 10 seconds
-        limit: 20, // 20 requests per 10 seconds
+        ttl: 10000,
+        limit: 20,
       },
       {
         name: 'long',
-        ttl: 60000, // 1 minute
-        limit: 100, // 100 requests per minute (general API usage)
+        ttl: 60000,
+        limit: 100,
       },
     ]),
 
-    // Audit Log Schema (Global)
+    // Audit Log Schema
     MongooseModule.forFeature([
       { name: AuditLog.name, schema: AuditLogSchema },
     ]),
@@ -76,6 +76,14 @@ import { AuditService } from './common/services/audit.service';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
   ],
   exports: [AuditService],

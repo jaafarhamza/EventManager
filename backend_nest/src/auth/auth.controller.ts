@@ -26,8 +26,9 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { AuthEntity } from './entities/auth.entity';
 import { JwtRefreshAuthGuard } from './guards/jwt-refresh-auth.guard';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
+import { Public } from '../common/decorators/public.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 // Define interface for authenticated request
 interface AuthenticatedRequest extends Request {
@@ -49,6 +50,7 @@ interface TokenRefreshResponse {
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('register')
   @Throttle({ short: { limit: 3, ttl: 60000 } }) // 3 registrations per minute
   @ApiOperation({ summary: 'Register a new user' })
@@ -64,6 +66,7 @@ export class AuthController {
     return this.authService.register(registerDto);
   }
 
+  @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @Throttle({ short: { limit: 5, ttl: 60000 } }) // 5 login attempts per minute
@@ -79,6 +82,7 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
+  @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtRefreshAuthGuard)
@@ -98,7 +102,6 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout user and revoke all refresh tokens' })
   @ApiResponse({
@@ -106,14 +109,13 @@ export class AuthController {
     description: 'Logged out successfully',
   })
   async logout(
-    @Request() req: AuthenticatedRequest,
+    @CurrentUser('id') userId: string,
   ): Promise<{ message: string }> {
-    return this.authService.logout(req.user.id);
+    return this.authService.logout(userId);
   }
 
   @Patch('change-password')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Change password for authenticated user' })
   @ApiResponse({
@@ -126,12 +128,13 @@ export class AuthController {
     description: 'New password must be different from current password',
   })
   async changePassword(
-    @Request() req: AuthenticatedRequest,
+    @CurrentUser('id') userId: string,
     @Body() changePasswordDto: ChangePasswordDto,
   ): Promise<{ message: string }> {
-    return this.authService.changePassword(req.user.id, changePasswordDto);
+    return this.authService.changePassword(userId, changePasswordDto);
   }
 
+  @Public()
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   @Throttle({ short: { limit: 3, ttl: 900000 } }) // 3 attempts per 15 minutes
@@ -147,6 +150,7 @@ export class AuthController {
     return this.authService.forgotPassword(forgotPasswordDto);
   }
 
+  @Public()
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   @Throttle({ short: { limit: 5, ttl: 900000 } }) // 5 attempts per 15 minutes
@@ -163,6 +167,7 @@ export class AuthController {
     return this.authService.resetPassword(resetPasswordDto);
   }
 
+  @Public()
   @Get('google')
   @SkipThrottle()
   @UseGuards(GoogleAuthGuard)
@@ -170,6 +175,7 @@ export class AuthController {
   @ApiResponse({ status: 302, description: 'Redirects to Google login' })
   async googleAuth() {}
 
+  @Public()
   @Get('google/callback')
   @SkipThrottle() // OAuth callbacks shouldn't be rate limited
   @UseGuards(GoogleAuthGuard)

@@ -14,6 +14,7 @@ export enum AuditAction {
   OAUTH_LOGIN = 'oauth_login',
   FAILED_LOGIN = 'failed_login',
   ACCOUNT_LOCKED = 'account_locked',
+  UNAUTHORIZED_ACCESS_ATTEMPT = 'UNAUTHORIZED_ACCESS_ATTEMPT',
 }
 
 @Schema({ timestamps: true })
