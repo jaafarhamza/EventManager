@@ -9,8 +9,10 @@ import {
   Query,
   UseGuards,
   Req,
+  Res,
+  Header,
 } from '@nestjs/common';
-import type { Request } from 'express';
+import type { Request, Response } from 'express';
 import { ReservationsService } from './reservations.service';
 import { CreateReservationDto } from './dto/create-reservation.dto';
 import { RefuseReservationDto } from './dto/refuse-reservation.dto';
@@ -119,5 +121,24 @@ export class ReservationsController {
       req.headers['user-agent'],
       cancelDto.reason,
     );
+  }
+
+  @Get(':id/ticket')
+  @Roles(UserRole.PARTICIPANT, UserRole.ADMIN)
+  @Header('Content-Type', 'application/pdf')
+  async downloadTicket(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Res() res: Response,
+  ) {
+    const pdfBuffer = await this.reservationsService.generateTicket(id, user);
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=ticket-${id}.pdf`,
+      'Content-Length': pdfBuffer.length,
+    });
+
+    res.send(pdfBuffer);
   }
 }

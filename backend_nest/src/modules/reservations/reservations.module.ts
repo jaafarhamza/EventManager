@@ -9,6 +9,7 @@ import {
   AuditLog,
   AuditLogSchema,
 } from '../../common/schemas/audit-log.schema';
+import { PdfService } from '../../common/services/pdf.service';
 
 @Module({
   imports: [
@@ -18,7 +19,7 @@ import {
     ]),
     EventsModule,
   ],
-  providers: [ReservationsService, AuditService],
+  providers: [ReservationsService, AuditService, PdfService],
   controllers: [ReservationsController],
   exports: [ReservationsService],
 })

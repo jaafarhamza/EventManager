@@ -15,6 +15,9 @@ import { EventStatus } from '../../common/enums/event-status.enum';
 import { UserRole } from '../../common/enums/user-role.enum';
 import { AuditService } from '../../common/services/audit.service';
 import { AuditAction } from '../../common/schemas/audit-log.schema';
+import { PdfService } from '../../common/services/pdf.service';
+import { Event } from '../events/schemas/event.schema';
+import { User } from '../users/schemas/user.schema';
 
 interface AuthenticatedUser {
   id: string;
@@ -29,6 +32,7 @@ export class ReservationsService {
     private reservationModel: Model<ReservationDocument>,
     private eventsService: EventsService,
     private auditService: AuditService,
+    private pdfService: PdfService,
   ) {}
 
   async create(
@@ -414,5 +418,57 @@ export class ReservationsService {
     });
 
     return reservation;
+  }
+
+  async generateTicket(id: string, user: AuthenticatedUser): Promise<Buffer> {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid reservation ID');
+    }
+
+    type PopulatedReservation = Omit<Reservation, 'eventId' | 'userId'> & {
+      _id: Types.ObjectId;
+      eventId: Event & { _id: Types.ObjectId };
+      userId: User & { _id: Types.ObjectId };
+      createdAt: Date;
+    };
+
+    const reservation = await this.reservationModel
+      .findById(id)
+      .populate<{ eventId: Event & { _id: Types.ObjectId } }>('eventId')
+      .populate<{ userId: User & { _id: Types.ObjectId } }>('userId')
+      .lean<PopulatedReservation>()
+      .exec();
+
+    if (!reservation) {
+      throw new NotFoundException('Reservation not found');
+    }
+
+    const reservationUserId = reservation.userId._id.toString();
+
+    if (user.role !== UserRole.ADMIN && reservationUserId !== user.id) {
+      throw new ForbiddenException(
+        'You do not have permission to download this ticket',
+      );
+    }
+
+    if (reservation.status !== ReservationStatus.CONFIRMED) {
+      throw new BadRequestException(
+        'Ticket is only available for confirmed reservations',
+      );
+    }
+
+    const pdfBuffer = await this.pdfService.generateTicket({
+      reservationId: reservation._id.toString(),
+      eventTitle: reservation.eventId.title,
+      eventDescription: reservation.eventId.description,
+      eventDate: reservation.eventId.date,
+      eventLocation: reservation.eventId.location,
+      participantName: `${reservation.userId.firstName} ${reservation.userId.lastName}`,
+      participantEmail: reservation.userId.email,
+      reservationStatus: 'CONFIRMÉ',
+      createdAt: reservation.createdAt,
+    });
+
+    return pdfBuffer;
   }
 }
