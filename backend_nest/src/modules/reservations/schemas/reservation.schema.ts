@@ -7,23 +7,23 @@ export type ReservationDocument = Reservation & Document;
 @Schema({ timestamps: true })
 export class Reservation {
   @Prop({ type: Types.ObjectId, ref: 'Event', required: true })
-  eventId: Types.ObjectId;
+  eventId!: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  userId: Types.ObjectId;
+  userId!: Types.ObjectId;
 
   @Prop({
     type: String,
     enum: ReservationStatus,
     default: ReservationStatus.PENDING,
   })
-  status: ReservationStatus;
+  status!: ReservationStatus;
 
   @Prop({ type: Date, default: null })
-  canceledAt: Date | null;
+  canceledAt!: Date | null;
 
   @Prop({ type: String, default: null })
-  cancelReason: string | null;
+  cancelReason!: string | null;
 }
 
 export const ReservationSchema = SchemaFactory.createForClass(Reservation);

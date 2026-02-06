@@ -7,28 +7,28 @@ export type EventDocument = Event & Document;
 @Schema({ timestamps: true })
 export class Event {
   @Prop({ required: true, minlength: 3, maxlength: 200, trim: true })
-  title: string;
+  title!: string;
 
   @Prop({ required: true, minlength: 10, trim: true })
-  description: string;
+  description!: string;
 
   @Prop({ required: true, type: Date })
-  date: Date;
+  date!: Date;
 
   @Prop({ required: true, trim: true })
-  location: string;
+  location!: string;
 
   @Prop({ required: true, min: 1, max: 1000 })
-  capacity: number;
+  capacity!: number;
 
   @Prop({ required: true, min: 0 })
-  availableSeats: number;
+  availableSeats!: number;
 
   @Prop({ type: String, enum: EventStatus, default: EventStatus.DRAFT })
-  status: EventStatus;
+  status!: EventStatus;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
-  createdBy: Types.ObjectId;
+  createdBy!: Types.ObjectId;
 }
 
 export const EventSchema = SchemaFactory.createForClass(Event);

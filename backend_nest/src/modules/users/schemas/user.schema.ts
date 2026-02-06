@@ -1,25 +1,41 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { HydratedDocument } from 'mongoose';
 import { UserRole } from '../../../common/enums';
 
-export type UserDocument = User & Document;
+export type UserDocument = HydratedDocument<User>;
 
 @Schema({ timestamps: true })
 export class User {
   @Prop({ required: true, unique: true, lowercase: true, trim: true })
-  email: string;
+  email!: string;
 
-  @Prop({ required: true, select: false })
-  password: string;
-
-  @Prop({ required: true, trim: true })
-  firstName: string;
+  @Prop({ required: false, select: false })
+  password?: string;
 
   @Prop({ required: true, trim: true })
-  lastName: string;
+  firstName!: string;
+
+  @Prop({ required: true, trim: true })
+  lastName!: string;
 
   @Prop({ type: String, enum: UserRole, default: UserRole.PARTICIPANT })
-  role: UserRole;
+  role!: UserRole;
+
+  @Prop({ select: false })
+  refreshTokenHash?: string;
+
+  // OAuth fields
+  @Prop({ type: String, enum: ['local', 'google'], default: 'local' })
+  provider!: string;
+
+  @Prop()
+  providerId?: string;
+
+  @Prop()
+  picture?: string;
+
+  @Prop({ default: false })
+  isEmailVerified!: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
