@@ -37,7 +37,7 @@ export class EventsService {
   }
 
   async findAll(userRole?: UserRole): Promise<Event[]> {
-    const filter: Record<string, any> = {};
+    const filter: Record<string, unknown> = {};
 
     if (userRole !== UserRole.ADMIN) {
       filter.status = EventStatus.PUBLISHED;

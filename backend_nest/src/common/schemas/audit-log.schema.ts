@@ -47,7 +47,7 @@ export class AuditLog {
   errorMessage?: string;
 
   @Prop({ type: Object })
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export const AuditLogSchema = SchemaFactory.createForClass(AuditLog);

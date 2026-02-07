@@ -159,7 +159,7 @@ export class ReservationsService {
     userId?: string,
     status?: ReservationStatus,
   ): Promise<Reservation[]> {
-    const filter: Record<string, any> = {};
+    const filter: Record<string, unknown> = {};
 
     if (eventId) {
       if (!Types.ObjectId.isValid(eventId)) {

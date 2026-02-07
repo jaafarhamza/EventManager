@@ -61,8 +61,7 @@ describe('EmailService', () => {
       await service.sendPasswordResetCode(email, firstName, code);
 
       // Assert
-      const sendMailMock = mockTransporter.sendMail as jest.Mock;
-      expect(sendMailMock).toHaveBeenCalledWith(
+      expect(mockTransporter.sendMail).toHaveBeenCalledWith(
         expect.objectContaining({
           from: expect.stringContaining('Event Manager') as string,
           to: email,
@@ -82,8 +81,7 @@ describe('EmailService', () => {
       await service.sendPasswordResetCode(email, firstName, code);
 
       // Assert
-      const sendMailMock = mockTransporter.sendMail as jest.Mock;
-      expect(sendMailMock).toHaveBeenCalledWith(
+      expect(mockTransporter.sendMail).toHaveBeenCalledWith(
         expect.objectContaining({
           html: expect.stringContaining(firstName) as string,
         }),

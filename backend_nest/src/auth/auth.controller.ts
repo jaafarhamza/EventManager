@@ -185,7 +185,7 @@ export class AuthController {
     description: 'Redirects to frontend with secure token handling',
   })
   async googleAuthRedirect(
-    @Request() req: { user?: any },
+    @Request() req: { user?: unknown },
     @Res() res: Response,
   ) {
     const result = await this.authService.googleLogin(req);

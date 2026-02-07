@@ -402,7 +402,7 @@ export class AuthService {
     };
   }
 
-  async googleLogin(req: { user?: any }) {
+  async googleLogin(req: { user?: unknown }) {
     if (!req.user) {
       throw new UnauthorizedException('No user from Google');
     }

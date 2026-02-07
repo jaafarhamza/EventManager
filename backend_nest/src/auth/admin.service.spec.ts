@@ -59,14 +59,16 @@ describe('AdminService', () => {
   });
 
   describe('getDashboardStats', () => {
-    it.skip('should return dashboard statistics structure', async () => {
+    it('should return dashboard statistics structure', async () => {
       // Arrange
       mockUserModel.countDocuments.mockResolvedValue(150);
-      mockEventModel.countDocuments
-        .mockResolvedValueOnce(10) // draft
-        .mockResolvedValueOnce(25) // published
-        .mockResolvedValueOnce(5) // canceled
-        .mockResolvedValueOnce(40); // total
+
+      // Mock aggregate for events count by status
+      mockEventModel.aggregate.mockResolvedValueOnce([
+        { _id: EventStatus.DRAFT, count: 10 },
+        { _id: EventStatus.PUBLISHED, count: 25 },
+        { _id: EventStatus.CANCELED, count: 5 },
+      ]);
 
       // Mock aggregate for reservations count
       mockReservationModel.aggregate.mockResolvedValueOnce([
@@ -76,9 +78,9 @@ describe('AdminService', () => {
         { _id: ReservationStatus.CANCELED, count: 5 },
       ]);
 
-      // Mock aggregate for events (3 calls: getAverageFillRate, getUpcomingEvents, getPopularEvents)
+      // Mock aggregate for events (3 more calls: getAverageFillRate, getUpcomingEvents, getPopularEvents)
       mockEventModel.aggregate
-        .mockResolvedValueOnce([{ _id: null, averageFillRate: 65.5 }]) // getAverageFillRate
+        .mockResolvedValueOnce([{ fillRate: 65.5 }]) // getAverageFillRate
         .mockResolvedValueOnce([]) // getUpcomingEvents
         .mockResolvedValueOnce([]); // getPopularEvents
 

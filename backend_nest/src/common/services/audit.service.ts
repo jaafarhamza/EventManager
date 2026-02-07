@@ -15,7 +15,7 @@ interface AuditLogData {
   userAgent?: string;
   success: boolean;
   errorMessage?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 @Injectable()
