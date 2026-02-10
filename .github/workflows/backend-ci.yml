@@ -1,0 +1,328 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - 'backend_nest/**'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - 'backend_nest/**'
+      - '.github/workflows/backend-ci.yml'
+
+# Cancel in-progress runs for the same workflow and branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================================================
+  # Job 1: Install Dependencies
+  # ============================================================================
+  install:
+    name: Install Dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: backend_nest/package-lock.json
+
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v4
+        with:
+          path: backend_nest/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('backend_nest/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
+
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        working-directory: ./backend_nest
+        run: npm ci
+
+      - name: Verify installation
+        working-directory: ./backend_nest
+        run: npm list --depth=0
+
+  # ============================================================================
+  # Job 2: Lint Code
+  # ============================================================================
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    needs: install
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: backend_nest/package-lock.json
+
+      - name: Restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: backend_nest/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('backend_nest/package-lock.json') }}
+
+      - name: Run ESLint
+        working-directory: ./backend_nest
+        run: npm run lint
+
+  # ============================================================================
+  # Job 3: Unit Tests
+  # ============================================================================
+  test-unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: install
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: backend_nest/package-lock.json
+
+      - name: Restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: backend_nest/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('backend_nest/package-lock.json') }}
+
+      - name: Run unit tests with coverage
+        working-directory: ./backend_nest
+        run: npm run test:cov
+        env:
+          NODE_ENV: test
+
+      - name: Upload unit test coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-coverage
+          path: backend_nest/coverage/
+          retention-days: 7
+
+  # ============================================================================
+  # Job 4: E2E Tests
+  # ============================================================================
+  test-e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: install
+    timeout-minutes: 15
+
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: admin
+          MONGO_INITDB_ROOT_PASSWORD: admin123
+          MONGO_INITDB_DATABASE: eventmanager_test
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ping: 1})'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --health-start-period 40s
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: backend_nest/package-lock.json
+
+      - name: Restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: backend_nest/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('backend_nest/package-lock.json') }}
+
+      - name: Wait for MongoDB to be ready
+        run: |
+          echo "Waiting for MongoDB to be ready..."
+          timeout 60 bash -c 'until mongosh --host localhost:27017 --username admin --password admin123 --authenticationDatabase admin --eval "db.adminCommand({ping: 1})" > /dev/null 2>&1; do sleep 2; done'
+          echo "MongoDB is ready!"
+
+      - name: Run E2E tests
+        working-directory: ./backend_nest
+        run: npm run test:e2e
+        env:
+          NODE_ENV: test
+          DATABASE_URL: mongodb://admin:admin123@localhost:27017/eventmanager_test?authSource=admin
+          JWT_SECRET: test-secret-key-for-e2e-tests-min-32-characters-long-for-access-token
+          JWT_EXPIRATION: 1h
+          JWT_REFRESH_SECRET: test-refresh-secret-key-for-e2e-tests-min-32-characters-long-for-refresh
+          JWT_REFRESH_EXPIRATION: 7d
+          JWT_REFRESH_EXPIRATION_DAYS: 7
+          BCRYPT_SALT_ROUNDS: 10
+          GOOGLE_CLIENT_ID: test-client-id
+          GOOGLE_CLIENT_SECRET: test-client-secret
+          GOOGLE_CALLBACK_URL: http://localhost:3000/auth/google/callback
+          EMAIL_HOST: smtp.test.com
+          EMAIL_PORT: 587
+          EMAIL_USER: test@test.com
+          EMAIL_PASSWORD: test-password
+          EMAIL_FROM: test@test.com
+          FRONTEND_URL: http://localhost:3001
+          CORS_ORIGIN: http://localhost:3001
+          API_PREFIX: api
+          PORT: 3000
+
+      - name: Upload E2E test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: backend_nest/coverage-e2e/
+          retention-days: 7
+
+  # ============================================================================
+  # Job 5: Build Application
+  # ============================================================================
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    needs: [lint, test-unit, test-e2e]
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: backend_nest/package-lock.json
+
+      - name: Restore node_modules cache
+        uses: actions/cache@v4
+        with:
+          path: backend_nest/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('backend_nest/package-lock.json') }}
+
+      - name: Build application
+        working-directory: ./backend_nest
+        run: npm run build
+
+      - name: Verify build output
+        working-directory: ./backend_nest
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "Build failed: dist directory not found"
+            exit 1
+          fi
+          if [ ! -f "dist/main.js" ]; then
+            echo "Build failed: main.js not found"
+            exit 1
+          fi
+          echo "Build successful!"
+          ls -la dist/
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: backend_nest/dist/
+          retention-days: 7
+
+  # ============================================================================
+  # Job 6: Code Coverage Report
+  # ============================================================================
+  coverage:
+    name: Upload Coverage
+    runs-on: ubuntu-latest
+    needs: [test-unit, test-e2e]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download unit test coverage
+        uses: actions/download-artifact@v4
+        with:
+          name: unit-test-coverage
+          path: backend_nest/coverage/
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./backend_nest/coverage/lcov.info
+          flags: backend-unit
+          name: backend-unit-coverage
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  # ============================================================================
+  # Job 7: Security Audit
+  # ============================================================================
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    needs: install
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Run npm audit
+        working-directory: ./backend_nest
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+
+  # ============================================================================
+  # Summary Job
+  # ============================================================================
+  ci-success:
+    name: CI Pipeline Success
+    runs-on: ubuntu-latest
+    needs: [lint, test-unit, test-e2e, build]
+    if: success()
+
+    steps:
+      - name: Success message
+        run: |
+          echo "✅ All CI checks passed successfully!"
+          echo "- Linting: ✅"
+          echo "- Unit Tests: ✅"
+          echo "- E2E Tests: ✅"
+          echo "- Build: ✅"
