@@ -8,7 +8,7 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Security Headers (2026 Best Practice)
+  // Security Headeres
   app.use(
     helmet({
       contentSecurityPolicy: {

@@ -16,13 +16,14 @@ export default function LoginPage() {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   
   const resetSuccess = searchParams.get('reset') === 'success';
+  const redirectUrl = searchParams.get('redirect') || '/';
   
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/');
+      router.push(redirectUrl);
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, redirectUrl]);
   
   const [formData, setFormData] = useState({
     email: '',
@@ -87,8 +88,8 @@ export default function LoginPage() {
       // Update Redux state
       dispatch(setUser(response.user));
       
-      // Redirect to home or dashboard
-      router.push('/');
+      // Redirect to the original
+      router.push(redirectUrl);
     } catch (error) {
       console.error('Login error:', error);
       console.error('Error details:', {
@@ -116,7 +117,11 @@ export default function LoginPage() {
 
   const handleGoogleLogin = () => {
     const googleAuthUrl = authApi.getGoogleAuthUrl();
-    window.location.href = googleAuthUrl;
+    // Add redirect parameter if present
+    const urlWithRedirect = redirectUrl !== '/' 
+      ? `${googleAuthUrl}?state=${encodeURIComponent(redirectUrl)}`
+      : googleAuthUrl;
+    window.location.href = urlWithRedirect;
   };
 
   return (
@@ -354,7 +359,7 @@ export default function LoginPage() {
         <p className="mt-6 text-center text-sm text-(--color-muted-foreground)">
           Don&apos;t have an account?{' '}
           <Link
-            href="/register"
+            href={redirectUrl !== '/' ? `/register?redirect=${encodeURIComponent(redirectUrl)}` : '/register'}
             className="font-medium text-(--color-primary) hover:underline"
           >
             Sign up for free

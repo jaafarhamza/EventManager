@@ -16,6 +16,10 @@ export default function AuthSuccessPage() {
       dispatch(setLoading(true));
       
       try {
+        // Get redirect URL from query params
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectUrl = urlParams.get('redirect') || '/';
+        
         // Fetch tokens from server-side API route
         const response = await fetch('/api/auth/session', {
           credentials: 'include',
@@ -50,8 +54,8 @@ export default function AuthSuccessPage() {
         // Update Redux state
         dispatch(setUser(user));
         
-        // Redirect to home
-        router.push('/');
+        // Redirect to the original page or home
+        router.push(redirectUrl);
       } catch (err) {
         console.error('Failed to initialize auth:', err);
         setError('Authentication failed. Please try again.');

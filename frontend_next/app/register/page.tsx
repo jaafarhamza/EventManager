@@ -14,12 +14,17 @@ export default function RegisterPage() {
   const dispatch = useAppDispatch();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   
+  // Get redirect URL from query params
+  const redirectUrl = typeof window !== 'undefined' 
+    ? new URLSearchParams(window.location.search).get('redirect') || '/'
+    : '/';
+  
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/');
+      router.push(redirectUrl);
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, redirectUrl]);
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -114,8 +119,8 @@ export default function RegisterPage() {
       // Update Redux state
       dispatch(setUser(response.user));
       
-      // Redirect to home
-      router.push('/');
+      // Redirect to the original page or home
+      router.push(redirectUrl);
     } catch (error) {
       console.error('Registration error:', error);
       
