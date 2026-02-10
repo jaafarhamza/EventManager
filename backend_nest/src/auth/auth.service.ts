@@ -329,14 +329,22 @@ export class AuthService {
   async resetPassword(resetPasswordDto: ResetPasswordDto) {
     const { email, code, newPassword } = resetPasswordDto;
 
+    // Trim inputs
+    const trimmedEmail = email.trim();
+    const trimmedCode = code.trim();
+    const trimmedPassword = newPassword.trim();
+
     // Find user by email
-    const user = await this.userModel.findOne({ email }).exec();
+    const user = await this.userModel.findOne({ email: trimmedEmail }).exec();
     if (!user) {
       throw new BadRequestException('Invalid code or email');
     }
 
     // Hash the code to compare with stored hash
-    const hashedCode = crypto.createHash('sha256').update(code).digest('hex');
+    const hashedCode = crypto
+      .createHash('sha256')
+      .update(trimmedCode)
+      .digest('hex');
 
     // Find valid reset code
     const resetTokenDoc = await this.passwordResetTokenModel
@@ -382,11 +390,26 @@ export class AuthService {
       this.configService.get<string>('BCRYPT_SALT_ROUNDS') || '10',
       10,
     );
-    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+    const hashedPassword = await bcrypt.hash(trimmedPassword, saltRounds);
 
     // Update password
-    user.password = hashedPassword;
-    await user.save();
+    const userWithPassword = await this.userModel
+      .findById(user._id)
+      .select('+password')
+      .exec();
+
+    if (!userWithPassword) {
+      throw new BadRequestException('User not found');
+    }
+
+    userWithPassword.password = hashedPassword;
+
+    if (userWithPassword.provider === 'google') {
+      userWithPassword.provider = 'local';
+      userWithPassword.providerId = undefined;
+    }
+
+    await userWithPassword.save();
 
     // Mark code as used
     resetTokenDoc.isUsed = true;

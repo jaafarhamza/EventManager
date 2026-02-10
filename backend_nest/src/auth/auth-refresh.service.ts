@@ -82,6 +82,10 @@ export class AuthRefreshTokenService {
       sub: user._id.toString(),
       email: user.email,
       role: user.role,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      picture: user.picture,
+      provider: user.provider,
     };
 
     const accessToken = this.jwtService.sign(accessPayload);
