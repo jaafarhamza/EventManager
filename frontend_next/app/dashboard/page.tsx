@@ -2,14 +2,20 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAppSelector } from '@/lib/store/hooks';
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { user } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
-    // Redirect to reservations page by default
-    router.replace('/dashboard/reservations');
-  }, [router]);
+    // Redirect based on user role
+    if (user?.role === 'ADMIN') {
+      router.replace('/dashboard/admin');
+    } else {
+      router.replace('/dashboard/reservations');
+    }
+  }, [user, router]);
 
   return (
     <div className="flex items-center justify-center min-h-[50vh]">
