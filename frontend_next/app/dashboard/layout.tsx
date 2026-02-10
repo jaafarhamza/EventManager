@@ -3,35 +3,24 @@
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAppSelector } from '@/lib/store/hooks';
+import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
+import { MobileDashboardMenu } from '@/components/dashboard/MobileDashboardMenu';
+import { AnimatedBackground } from '@/components/layout';
 
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-  requireAuth?: boolean;
-  requireAdmin?: boolean;
-}
-
-export function ProtectedRoute({
+export default function DashboardLayout({
   children,
-  requireAuth = true,
-  requireAdmin = false,
-}: ProtectedRouteProps) {
+}: {
+  children: React.ReactNode;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated, user, isLoading } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
-    if (isLoading) return;
-
-    if (requireAuth && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
-      return;
     }
-
-    if (requireAdmin && user?.role !== 'ADMIN') {
-      router.push('/');
-      return;
-    }
-  }, [isAuthenticated, user, isLoading, requireAuth, requireAdmin, router, pathname]);
+  }, [isAuthenticated, isLoading, router, pathname]);
 
   if (isLoading) {
     return (
@@ -44,13 +33,22 @@ export function ProtectedRoute({
     );
   }
 
-  if (requireAuth && !isAuthenticated) {
+  if (!isAuthenticated || !user) {
     return null;
   }
 
-  if (requireAdmin && user?.role !== 'ADMIN') {
-    return null;
-  }
-
-  return <>{children}</>;
+  return (
+    <>
+      <AnimatedBackground />
+      <div className="flex min-h-screen pt-20 pb-20 lg:pb-0">
+        <DashboardSidebar user={user} />
+        <main className="flex-1 p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
+        </main>
+        <MobileDashboardMenu user={user} />
+      </div>
+    </>
+  );
 }

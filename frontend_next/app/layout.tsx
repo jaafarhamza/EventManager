@@ -29,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${mclaren.variable} ${inter.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${mclaren.variable} ${inter.variable}`} data-scroll-behavior="smooth">
       <body className="font-(family-name:--font-inter) antialiased">
         <ThemeProvider
           attribute="class"

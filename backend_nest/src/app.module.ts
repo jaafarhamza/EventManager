@@ -45,18 +45,18 @@ import { ReservationsModule } from './modules/reservations/reservations.module';
     ThrottlerModule.forRoot([
       {
         name: 'short',
-        ttl: 1000,
-        limit: 3,
+        ttl: 1000, // 1 second
+        limit: 10,
       },
       {
         name: 'medium',
-        ttl: 10000,
-        limit: 20,
+        ttl: 10000, // 10 seconds
+        limit: 50,
       },
       {
         name: 'long',
-        ttl: 60000,
-        limit: 100,
+        ttl: 60000, // 60 seconds
+        limit: 200,
       },
     ]),
 

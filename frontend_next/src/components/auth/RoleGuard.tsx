@@ -9,15 +9,15 @@ interface RoleGuardProps {
   fallback?: React.ReactNode;
 }
 
-export default function RoleGuard({
-  children,
-  allowedRoles,
-  fallback = null,
-}: RoleGuardProps) {
-  const { user } = useAppSelector((state) => state.auth);
+export function RoleGuard({ children, allowedRoles, fallback }: RoleGuardProps) {
+  const { user, isAuthenticated } = useAppSelector((state) => state.auth);
 
-  if (!user || !allowedRoles.includes(user.role)) {
-    return <>{fallback}</>;
+  if (!isAuthenticated || !user) {
+    return fallback || null;
+  }
+
+  if (!allowedRoles.includes(user.role)) {
+    return fallback || null;
   }
 
   return <>{children}</>;

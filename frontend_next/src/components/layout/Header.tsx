@@ -9,7 +9,9 @@ import { useAppSelector, useAppDispatch } from "@/lib/store/hooks";
 import { clearUser } from "@/lib/store/slices/authSlice";
 import { authApi } from "@/lib/api";
 
-const navigation = [{ name: "Events", href: "/events" }];
+const navigation = [
+  { name: "Events", href: "/events" },
+];
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -102,6 +104,23 @@ export default function Header() {
                 </Link>
               );
             })}
+            
+            {/* Dashboard Link - Only show when authenticated */}
+            {isAuthenticated && (
+              <Link
+                href="/dashboard/reservations"
+                className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  pathname.startsWith("/dashboard")
+                    ? "text-(--color-primary)"
+                    : "text-(--color-muted-foreground) hover:text-(--color-foreground)"
+                }`}
+              >
+                Dashboard
+                {pathname.startsWith("/dashboard") && (
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-0.5 bg-(--color-primary) rounded-full" />
+                )}
+              </Link>
+            )}
           </div>
 
           {/* Right Side Actions */}
@@ -265,6 +284,19 @@ export default function Header() {
                 </Link>
               );
             })}
+            
+            {isAuthenticated && (
+              <Link
+                href="/dashboard/reservations"
+                className={`block px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                  pathname.startsWith("/dashboard")
+                    ? "bg-(--color-primary)/10 text-(--color-primary)"
+                    : "text-(--color-muted-foreground) hover:bg-(--color-muted) hover:text-(--color-foreground)"
+                }`}
+              >
+                Dashboard
+              </Link>
+            )}
 
             {/* Mobile Auth Buttons */}
             <div className="pt-4 space-y-3 border-t border-(--color-border)">

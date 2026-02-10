@@ -1,2 +1,2 @@
-export { default as ProtectedRoute } from './ProtectedRoute';
-export { default as RoleGuard } from './RoleGuard';
+export { ProtectedRoute } from './ProtectedRoute';
+export { RoleGuard } from './RoleGuard';
